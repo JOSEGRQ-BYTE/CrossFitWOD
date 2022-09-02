@@ -1,0 +1,122 @@
+﻿using System;
+using CrossFitWOD.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using CrossFitWOD.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
+
+namespace CrossFitWOD.Controllers
+{
+    [ApiController]
+    [Route("API/Users")]
+    public class UserController: ControllerBase
+    {
+
+        private readonly SignInManager<User> _SigninManager;
+        private readonly UserManager<User> _UserManager;
+        private readonly RoleManager<IdentityRole> _RoleManager;
+        private readonly IConfiguration _Configuration;
+
+        public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        {
+            _SigninManager = signInManager;
+            _UserManager = userManager;
+            _Configuration = configuration;
+            _RoleManager = roleManager;
+        }
+
+
+
+        [HttpPost("SignUpUser")]
+        //[Authorize]
+        public async Task<ActionResult<SignUpDTO>> SignUpUser([FromBody] SignUpDTO userForm)
+        {
+            // ONLY if model is valid
+            if (ModelState.IsValid)
+            {
+                
+                var existingUser = await _UserManager.FindByEmailAsync(userForm.Email);
+                if (existingUser == null)
+                {
+                    User newUser = new User
+                    {
+                        UserName = userForm.Email,
+                        Email = userForm.Email,
+                        FirstName = userForm.FirstName,
+                        LastName = userForm.LastName,
+                        SecurityStamp = Guid.NewGuid().ToString(),
+                    };
+
+                    var newlyCreatedUser = await _UserManager.CreateAsync(newUser, userForm.Password);
+
+                    if (newlyCreatedUser.Succeeded)
+                    {
+                        await _UserManager.AddToRoleAsync(newUser, "Admin");
+                        return Created("", userForm);
+                    }
+                }
+
+            }
+
+            return BadRequest();
+        }
+
+        [HttpPost("LoginUser")]
+        public async Task<ActionResult> LoginUser(LoginDTO userDetails)
+        {
+            // ONLY if model valid
+            if (ModelState.IsValid)
+            {
+                var existingUser = await _UserManager.FindByEmailAsync(userDetails.Email);
+                if (existingUser is not null)
+                {
+                    var passwordCheck = await _SigninManager.CheckPasswordSignInAsync(existingUser, userDetails.Password, false);
+                    if (passwordCheck.Succeeded)
+                    {
+                        var userRoles = await _UserManager.GetRolesAsync(existingUser);
+
+                        var authclaims = new List<Claim>
+                        {
+                            new Claim(JwtRegisteredClaimNames.Email, existingUser.Email),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName)
+                        };
+
+
+                        foreach (var userRole in userRoles)
+                        {
+                            authclaims.Add(new Claim(ClaimTypes.Role, userRole));
+                        }
+
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_Configuration["JWT:Secret"]));
+                        var userCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                        var userToken = new JwtSecurityToken(
+                            issuer: _Configuration["JWT:Issuer"],
+                            audience: _Configuration["JWT:Audience"],
+                            claims: authclaims,
+                            expires: DateTime.UtcNow.AddHours(3),
+                            signingCredentials: userCredentials);
+
+                        return Ok(new
+                        {
+                            token = new JwtSecurityTokenHandler().WriteToken(userToken),
+                            expiration = userToken.ValidTo
+                        });
+                    }
+
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+            }
+
+            return BadRequest();
+        }
+    }
+}
+
