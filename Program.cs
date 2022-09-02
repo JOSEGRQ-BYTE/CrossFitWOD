@@ -54,7 +54,8 @@ builder.Services.AddSwaggerGen(s => {
 
 
 // Dependency Injection
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+//builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddTransient<IWODRepository, WODRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 // SQL Server Connection

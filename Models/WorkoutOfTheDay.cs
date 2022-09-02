@@ -7,6 +7,7 @@ namespace CrossFitWOD.Models
     public record WorkoutOfTheDay
     {
         public Guid Id { get; init; }
+        public string? UserId { get; init; }
         public string? Title { get; init; }
         public string? Description { get; init; }
         public WODLevel Level { get; init; }

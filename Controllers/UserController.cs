@@ -32,7 +32,7 @@ namespace CrossFitWOD.Controllers
 
 
         [HttpPost("SignUpUser")]
-        //[Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SignUpDTO>> SignUpUser([FromBody] SignUpDTO userForm)
         {
             // ONLY if model is valid
@@ -79,6 +79,7 @@ namespace CrossFitWOD.Controllers
                     {
                         var userRoles = await _UserManager.GetRolesAsync(existingUser);
 
+                        // Create User Claims
                         var authclaims = new List<Claim>
                         {
                             new Claim(JwtRegisteredClaimNames.Email, existingUser.Email),
@@ -86,7 +87,7 @@ namespace CrossFitWOD.Controllers
                             new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName)
                         };
 
-
+                        // Add Roles to Claims
                         foreach (var userRole in userRoles)
                         {
                             authclaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -101,17 +102,21 @@ namespace CrossFitWOD.Controllers
                             expires: DateTime.UtcNow.AddHours(3),
                             signingCredentials: userCredentials);
 
-                        return Ok(new
+                        return StatusCode(200, new
                         {
                             token = new JwtSecurityTokenHandler().WriteToken(userToken),
                             expiration = userToken.ValidTo
                         });
                     }
+                    else
+                    {
+                        return StatusCode(400, "Incorrect password.");
+                    }
 
                 }
                 else
                 {
-                    return Unauthorized();
+                    return StatusCode(400, "User does not exist.");
                 }
             }
 

@@ -10,6 +10,9 @@ namespace CrossFitWOD.Data
 {
     public class AppDBContext: IdentityDbContext<Models.User>
     {
+        //public AppDBContext()
+        //{
+        //}
 
         public AppDBContext(DbContextOptions<AppDBContext> options) : base(options)
         {

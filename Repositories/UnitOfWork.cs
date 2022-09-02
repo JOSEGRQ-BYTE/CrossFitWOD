@@ -2,24 +2,28 @@
 using CrossFitWOD.Data;
 using CrossFitWOD.Interfaces;
 using CrossFitWOD.Models;
+using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CrossFitWOD.Repositories
 {
 
     public class UnitOfWork : IUnitOfWork
     {
-        private AppDBContext _Context;
-        private GenericRepository<WorkoutOfTheDay> _WODRepository;
-        private bool _Disposed = false;
 
-        public UnitOfWork(AppDBContext context)
+        private AppDBContext _Context;
+        private bool _Disposed = false;
+        public IWODRepository WODRepository { get; }
+
+
+        public UnitOfWork(AppDBContext dBContext, IWODRepository wODRepository)
         {
-            _Context = context;
-            _WODRepository = new GenericRepository<WorkoutOfTheDay>(_Context);
+            _Context = dBContext;
+            WODRepository = wODRepository;
         }
 
-        public GenericRepository<WorkoutOfTheDay> WODRepository
+        /*public GenericRepository<WorkoutOfTheDay> WODRepository
         {
             get
             {
@@ -28,7 +32,7 @@ namespace CrossFitWOD.Repositories
                     _WODRepository = new GenericRepository<WorkoutOfTheDay>(_Context);
                 return _WODRepository;
             }
-        }
+        }*/
 
         public void Save()
         {

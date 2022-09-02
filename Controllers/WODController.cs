@@ -1,9 +1,13 @@
 
+using System.Security.Claims;
+using CrossFitWOD.Data;
 using CrossFitWOD.DTOs;
 using CrossFitWOD.Extensions;
+using CrossFitWOD.Interfaces;
 using CrossFitWOD.Models;
 using CrossFitWOD.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrossFitWOD.Controllers
@@ -11,18 +15,27 @@ namespace CrossFitWOD.Controllers
 
     [ApiController]
     [Route("API/Workouts")]
+    [Authorize(Roles = "Administrator")]
     public class  WODController: ControllerBase
     {
-        private readonly UnitOfWork _UnitOfWork;
 
-        public WODController(UnitOfWork unitOfWork)
+        private readonly IUnitOfWork _UnitOfWork;
+        private readonly UserManager<User> _UserManager;
+        private readonly SignInManager<User> _SignInManager;
+
+        public WODController(IUnitOfWork unitOfWork, UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _UnitOfWork = unitOfWork;
+            _UserManager = userManager;
+            _SignInManager = signInManager;
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<WorkoutOfTheDayDTO>> GetWODs()
         {
+
+            var temp = User;
+
             var wods = _UnitOfWork.WODRepository.GetAll()?.Select(wod => wod.ToDTO());
 
             if (wods is null)
@@ -45,20 +58,26 @@ namespace CrossFitWOD.Controllers
         [HttpPost]
         public async Task<ActionResult<WorkoutOfTheDayDTO>> CreateWOD(CreateWorkoutOfTheDayDTO newWOD)
         {
-            WorkoutOfTheDay wod = new WorkoutOfTheDay
+            if (User.Identity.IsAuthenticated)
             {
-                Id = Guid.NewGuid(),
-                Title = newWOD.Title,
-                Description = newWOD.Description,
-                CoachTip = newWOD.CoachTip,
-                Level = newWOD.Level,
-                Date = newWOD.Date,
-                Results = newWOD.Results
-            };
+                WorkoutOfTheDay wod = new WorkoutOfTheDay
+                {
+                    Id = Guid.NewGuid(),
+                    Title = newWOD.Title,
+                    Description = newWOD.Description,
+                    CoachTip = newWOD.CoachTip,
+                    Level = newWOD.Level,
+                    Date = newWOD.Date,
+                    UserId = "Test",
+                    Results = newWOD.Results
+                };
 
-            await _UnitOfWork.WODRepository.Create(wod);
+                await _UnitOfWork.WODRepository.Create(wod);
 
-            return CreatedAtAction(nameof(GetWOD), new { id = wod.Id }, wod.ToDTO());
+                return CreatedAtAction(nameof(GetWOD), new { id = wod.Id }, wod.ToDTO());
+            }
+
+            return StatusCode(400, "User not logged in.");
 
         }
 
