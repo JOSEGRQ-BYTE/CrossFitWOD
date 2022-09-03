@@ -18,6 +18,17 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = "AllowedSpecificationsOrigins";
+// Enable CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowedOrigins,
+                      builder => {
+                          builder.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+                      });
+});
+
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -106,6 +117,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
 }
+
+app.UseCors(allowedOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();

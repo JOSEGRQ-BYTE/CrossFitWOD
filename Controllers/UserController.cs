@@ -8,11 +8,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 namespace CrossFitWOD.Controllers
 {
     [ApiController]
     [Route("API/Users")]
+    [EnableCors("AllowedSpecificationsOrigins")]
     public class UserController: ControllerBase
     {
 
@@ -104,8 +106,12 @@ namespace CrossFitWOD.Controllers
 
                         return StatusCode(200, new
                         {
+                            email = existingUser.Email,
+                            firstName = existingUser.FirstName,
+                            lastName = existingUser.LastName,
                             token = new JwtSecurityTokenHandler().WriteToken(userToken),
-                            expiration = userToken.ValidTo
+                            expiration = userToken.ValidTo,
+                            isLoggedIn = true
                         });
                     }
                     else
