@@ -31,11 +31,9 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public ActionResult<IEnumerable<WorkoutOfTheDayDTO>> GetWODs()
         {
-
-            var temp = User;
-
             var wods = _UnitOfWork.WODRepository.GetAll()?.Select(wod => wod.ToDTO());
 
             if (wods is null)
@@ -58,8 +56,12 @@ namespace CrossFitWOD.Controllers
         [HttpPost]
         public async Task<ActionResult<WorkoutOfTheDayDTO>> CreateWOD(CreateWorkoutOfTheDayDTO newWOD)
         {
-            if (User.Identity.IsAuthenticated)
+            var currentIdentity = User.Identity;
+            if (currentIdentity is not null && currentIdentity.IsAuthenticated)
             {
+
+                var currentUser = await _UserManager.FindByEmailAsync(currentIdentity.Name);
+
                 WorkoutOfTheDay wod = new WorkoutOfTheDay
                 {
                     Id = Guid.NewGuid(),
@@ -68,8 +70,10 @@ namespace CrossFitWOD.Controllers
                     CoachTip = newWOD.CoachTip,
                     Level = newWOD.Level,
                     Date = newWOD.Date,
-                    UserId = "Test",
-                    Results = newWOD.Results
+                    UserId = currentUser.Id,
+                    FirstName = currentUser.FirstName,
+                    LastName = currentUser.LastName,
+                    Results = newWOD.Results,
                 };
 
                 await _UnitOfWork.WODRepository.Create(wod);

@@ -86,7 +86,10 @@ namespace CrossFitWOD.Controllers
                         {
                             new Claim(JwtRegisteredClaimNames.Email, existingUser.Email),
                             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName)
+                            new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName),
+                            new Claim(JwtRegisteredClaimNames.GivenName, existingUser.FirstName),
+                            new Claim(JwtRegisteredClaimNames.FamilyName, existingUser.LastName),
+                            new Claim("UserID", existingUser.Id)
                         };
 
                         // Add Roles to Claims

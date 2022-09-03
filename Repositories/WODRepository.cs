@@ -18,7 +18,7 @@ namespace CrossFitWOD.Repositories
         }
         public async Task<IEnumerable<WorkoutOfTheDay>> GetWODByUserID(string id)
         {
-            return await _context.Set<WorkoutOfTheDay>().Where(w => w.UserId==id).ToListAsync();
+            return await _Context.Set<WorkoutOfTheDay>().Where(w => w.UserId==id).ToListAsync();
         }
     }
 

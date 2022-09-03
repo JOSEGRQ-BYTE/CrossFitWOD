@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using CrossFitWOD.Data;
 using CrossFitWOD.Interfaces;
+using IdentityModel;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrossFitWOD.Repositories
@@ -10,19 +11,23 @@ namespace CrossFitWOD.Repositories
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
 
-        internal DbContext _context;
+        internal DbContext _Context;
         internal DbSet<T> _dbSet;
 
         public GenericRepository(DbContext context)
         {
-            _context = context;
+            _Context = context;
             _dbSet = context.Set<T>();
         }
 
         // Create/Add a new entity => POST (C)
         public virtual async Task Create(T entity)
         {
+            if (entity is null)
+                throw new ArgumentNullException("entity");
+
             await _dbSet.AddAsync(entity);
+            await _Context.SaveChangesAsync();
         }
 
         // Get all entities => GET (R)
@@ -40,8 +45,13 @@ namespace CrossFitWOD.Repositories
         // Updates an existing entity => UPDATE (U)
         public virtual void Update(T entityToUpdate)
         {
+            if (entityToUpdate is null)
+                throw new ArgumentNullException("entity");
+
             _dbSet.Attach(entityToUpdate);
-            _context.Entry(entityToUpdate).State = EntityState.Modified;
+            _Context.Entry(entityToUpdate).State = EntityState.Modified;
+
+            _Context.SaveChanges();
         }
 
         // Deletes an entity from the set => DELETE (D)
@@ -49,11 +59,13 @@ namespace CrossFitWOD.Repositories
         {
             T entityToDelete = await GetByID(id);
             Delete(entityToDelete);
+
+            await _Context.SaveChangesAsync();
         }
 
         public virtual void Delete(T entityToDelete)
         {
-            if (_context.Entry(entityToDelete).State == EntityState.Detached)
+            if (_Context.Entry(entityToDelete).State == EntityState.Detached)
             {
                 _dbSet.Attach(entityToDelete);
             }
