@@ -10,12 +10,18 @@ namespace CrossFitWOD.Extensions
         {
             return new WorkoutOfTheDayDTO
             {
+               // WOD Info
                Id = wod.Id,
                Title = wod.Title,
                Description = wod.Description,
                CoachTip = wod.CoachTip,
                Level = wod.Level,
-               Date = wod.Date
+               Date = wod.Date,
+               Results = wod.Results,
+
+               // User Info
+               //FirstName = wod.User.FirstName,
+               //LastName = wod.User.LastName,
             };
         }
     }

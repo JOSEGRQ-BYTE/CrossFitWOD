@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using CrossFitWOD.Data;
 using CrossFitWOD.Interfaces;
 using IdentityModel;
+using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrossFitWOD.Repositories
@@ -24,7 +25,7 @@ namespace CrossFitWOD.Repositories
         public virtual async Task Create(T entity)
         {
             if (entity is null)
-                throw new ArgumentNullException("entity");
+                throw new ArgumentNullException(nameof(entity));
 
             await _dbSet.AddAsync(entity);
             await _Context.SaveChangesAsync();
@@ -39,17 +40,26 @@ namespace CrossFitWOD.Repositories
         // Get entity by ID => GET (R)
         public virtual async Task<T> GetByID<TKey>(TKey id)
         {
-            return await _dbSet.FindAsync(id);
+            var entity = await _dbSet.FindAsync(id);
+
+            if(entity is null)
+                throw new ArgumentNullException(nameof(T));
+
+            return entity;
         }
+       
 
         // Updates an existing entity => UPDATE (U)
         public virtual void Update(T entityToUpdate)
         {
+            // NULL reference
             if (entityToUpdate is null)
-                throw new ArgumentNullException("entity");
+                throw new ArgumentNullException(nameof(entityToUpdate));
 
+            // Modify
             _dbSet.Attach(entityToUpdate);
-            _Context.Entry(entityToUpdate).State = EntityState.Modified;
+            var entry = _Context.Entry(entityToUpdate);
+            entry.State = EntityState.Modified;
 
             _Context.SaveChanges();
         }

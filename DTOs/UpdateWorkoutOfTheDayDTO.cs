@@ -15,6 +15,7 @@ namespace CrossFitWOD.DTOs
         [Required]
         public DateTime Date { get; init; }
         public string? CoachTip { get; init; }
+        public string? Results { get; set; }
     }
 }
 

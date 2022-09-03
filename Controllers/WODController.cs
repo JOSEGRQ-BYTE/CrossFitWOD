@@ -6,9 +6,11 @@ using CrossFitWOD.Extensions;
 using CrossFitWOD.Interfaces;
 using CrossFitWOD.Models;
 using CrossFitWOD.Repositories;
+using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrossFitWOD.Controllers
 {
@@ -34,7 +36,8 @@ namespace CrossFitWOD.Controllers
         [AllowAnonymous]
         public ActionResult<IEnumerable<WorkoutOfTheDayDTO>> GetWODs()
         {
-            var wods = _UnitOfWork.WODRepository.GetAll()?.Select(wod => wod.ToDTO());
+
+            var wods = _UnitOfWork.WODRepository.GetAll().Select(wod => wod.ToDTO());
 
             if (wods is null)
                 return NotFound();
@@ -43,6 +46,7 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<WorkoutOfTheDayDTO>> GetWOD(Guid id)
         {
             var wod = await _UnitOfWork.WODRepository.GetByID<Guid>(id);
@@ -70,9 +74,7 @@ namespace CrossFitWOD.Controllers
                     CoachTip = newWOD.CoachTip,
                     Level = newWOD.Level,
                     Date = newWOD.Date,
-                    UserId = currentUser.Id,
-                    FirstName = currentUser.FirstName,
-                    LastName = currentUser.LastName,
+                    User = currentUser,
                     Results = newWOD.Results,
                 };
 
@@ -86,14 +88,14 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateWOD(Guid id, CreateWorkoutOfTheDayDTO updatedWOD)
+        public async Task<ActionResult> UpdateWOD(Guid id, [FromBody] UpdateWorkoutOfTheDayDTO updatedWOD)
         {
             var currentWOD = await _UnitOfWork.WODRepository.GetByID(id);
 
             if (currentWOD is null)
                 return NotFound();
 
-            WorkoutOfTheDay refreshedWOD = currentWOD with
+            /*WorkoutOfTheDay refreshedWOD = currentWOD with
             {
                 Title = updatedWOD.Title,
                 Description = updatedWOD.Description,
@@ -101,16 +103,24 @@ namespace CrossFitWOD.Controllers
                 Level = updatedWOD.Level,
                 Date = updatedWOD.Date,
                 Results = updatedWOD.Results
-            };
+            };*/
 
-            _UnitOfWork.WODRepository.Update(refreshedWOD);
+
+            currentWOD.Title = updatedWOD.Title;
+            currentWOD.Description = updatedWOD.Description;
+            currentWOD.CoachTip = updatedWOD.CoachTip;
+            currentWOD.Level = updatedWOD.Level;
+            currentWOD.Date = updatedWOD.Date;
+            currentWOD.Results = updatedWOD.Results;
+
+            _UnitOfWork.WODRepository.Update(currentWOD);
 
             return NoContent();
 
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> UpdateWOD(Guid id)
+        public async Task<ActionResult> DeleteWOD(Guid id)
         {
             var currentWOD = await _UnitOfWork.WODRepository.GetByID(id);
 

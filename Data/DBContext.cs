@@ -10,10 +10,6 @@ namespace CrossFitWOD.Data
 {
     public class AppDBContext: IdentityDbContext<Models.User>
     {
-        //public AppDBContext()
-        //{
-        //}
-
         public AppDBContext(DbContextOptions<AppDBContext> options) : base(options)
         {
         }
@@ -24,6 +20,17 @@ namespace CrossFitWOD.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+
+            modelBuilder.Entity<WorkoutOfTheDay>()
+                .HasOne(p => p.User)
+                .WithMany(b => b.Workouts).IsRequired();
+
+            modelBuilder.Entity<User>()
+            .HasMany(c => c.Workouts)
+            .WithOne(e => e.User).IsRequired();
+
+
         }
     }
 }

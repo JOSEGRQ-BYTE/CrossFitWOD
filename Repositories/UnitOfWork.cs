@@ -23,17 +23,6 @@ namespace CrossFitWOD.Repositories
             WODRepository = wODRepository;
         }
 
-        /*public GenericRepository<WorkoutOfTheDay> WODRepository
-        {
-            get
-            {
-
-                if(_WODRepository is null)
-                    _WODRepository = new GenericRepository<WorkoutOfTheDay>(_Context);
-                return _WODRepository;
-            }
-        }*/
-
         public void Save()
         {
             _Context.SaveChanges();

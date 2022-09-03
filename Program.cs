@@ -65,7 +65,6 @@ builder.Services.AddSwaggerGen(s => {
 
 
 // Dependency Injection
-//builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddTransient<IWODRepository, WODRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
@@ -94,8 +93,6 @@ builder.Services.AddAuthentication(options =>
 
 // SQL Server Health Check
 builder.Services.AddHealthChecks().AddCheck<SQLServerHealthCheck>("SQLDBConnectionCheck");
-//builder.Services.AddControllers();
-
 
 
 var app = builder.Build();
