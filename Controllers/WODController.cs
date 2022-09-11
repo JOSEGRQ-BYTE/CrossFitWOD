@@ -88,7 +88,7 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateWOD(Guid id, [FromBody] UpdateWorkoutOfTheDayDTO updatedWOD)
+        public async Task<ActionResult<WorkoutOfTheDayDTO>> UpdateWOD(Guid id, [FromBody] UpdateWorkoutOfTheDayDTO updatedWOD)
         {
             var currentWOD = await _UnitOfWork.WODRepository.GetByID(id);
 
@@ -115,7 +115,7 @@ namespace CrossFitWOD.Controllers
 
             _UnitOfWork.WODRepository.Update(currentWOD);
 
-            return NoContent();
+            return StatusCode(200, currentWOD);
 
         }
 
