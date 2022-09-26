@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using CrossFitWOD.Controllers;
 using CrossFitWOD.Data;
 using CrossFitWOD.Extensions;
 using CrossFitWOD.Interfaces;
@@ -7,6 +8,7 @@ using CrossFitWOD.Models;
 using CrossFitWOD.Repositories;
 using HealthChecks.UI.Client;
 using k8s.Models;
+using MailKit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -65,6 +67,7 @@ builder.Services.AddSwaggerGen(s => {
 
 
 // Dependency Injection
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IWODRepository, WODRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
@@ -93,6 +96,8 @@ builder.Services.AddAuthentication(options =>
 
 // SQL Server Health Check
 builder.Services.AddHealthChecks().AddCheck<SQLServerHealthCheck>("SQLDBConnectionCheck");
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 
 var app = builder.Build();
