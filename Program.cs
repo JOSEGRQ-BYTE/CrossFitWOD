@@ -119,11 +119,42 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
 }
+//app.UseHttpsRedirection();
+//app.UseStaticFiles();
+//app.UseRouting();
+
+
+DefaultFilesOptions options = new DefaultFilesOptions();
+options.DefaultFileNames.Clear();
+options.DefaultFileNames.Add("/index.html");
+app.UseDefaultFiles(options);
+
+//app.UseDefaultFiles(options);
+app.UseStaticFiles();
+
+app.UseRouting();
+/*if (!string.IsNullOrEmpty(ServerConfig.FolderNotFoundFallbackPath))
+{
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapFallbackToFile("/index.html");
+    });
+}*/
+
 
 app.UseCors(allowedOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapFallbackToFile("/{id}", "/index.html");
+    endpoints.MapFallbackToFile("/", "/index.html");
+});
+
 
 app.MapControllers();
 app.MapHealthChecks("/API/Health", new HealthCheckOptions()
@@ -131,5 +162,16 @@ app.MapHealthChecks("/API/Health", new HealthCheckOptions()
     Predicate = _ => true,
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
+
+/*app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == 404 && !Path.HasExtension(context.Request.Path.Value))
+    {
+        context.Request.Path = "/index.html";
+        context.Response.StatusCode = 200;
+        await next();
+    }
+});*/
 
 app.Run();
