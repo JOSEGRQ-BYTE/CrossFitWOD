@@ -85,8 +85,8 @@ namespace CrossFitWOD.Controllers
                         var authclaims = new List<Claim>
                         {
                             new Claim(JwtRegisteredClaimNames.Email, existingUser.Email),
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName),
+                            new Claim(JwtRegisteredClaimNames.Jti, existingUser.Id.ToString()),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, existingUser.UserName)
                         };
 
                         // Add Roles to Claims
@@ -125,6 +125,44 @@ namespace CrossFitWOD.Controllers
                     return StatusCode(400, "User does not exist.");
                 }
             }
+
+            return BadRequest();
+        }
+
+        [HttpPost("ChangePassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDTO passwordModel)
+        {
+            // If valid
+            if (ModelState.IsValid)
+            {
+                // Pull current user
+                var userId = HttpContext.User.Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
+                var user = await _UserManager.FindByIdAsync(userId);
+
+                if (user is not null)
+                {
+                    var result = await _UserManager.ChangePasswordAsync(user, passwordModel.CurrentPassword, passwordModel.NewPassword);
+
+                    // Password change was not successful
+                    if (!result.Succeeded)
+                    {
+                        //List<string> errors = new List<string>();
+                        //foreach (var error in result.Errors)
+                        //{
+                        //    errors.Add(error.Description);
+                        //    //ModelState.AddModelError(string.Empty, error.Description);
+                        //}
+                        return StatusCode(400, result.Errors.FirstOrDefault()?.Description ?? "Unexpected Error");
+                    }
+
+                    await _SigninManager.RefreshSignInAsync(user);
+                    return Ok("Password was changed successfully");
+                }
+                else
+                    return StatusCode(401, "User not found");
+            }
+
 
             return BadRequest();
         }

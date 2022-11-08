@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using CrossFitWOD.Controllers;
 using CrossFitWOD.Data;
@@ -73,7 +74,9 @@ builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 // SQL Server Connection
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(builder.Configuration["ConnectionStrings:DefaultConnection"]));
-builder.Services.AddIdentity<User, IdentityRole>().AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDBContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentity<User, IdentityRole>(/*options => {
+    options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Jti;
+}*/).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDBContext>().AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -98,7 +101,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddHealthChecks().AddCheck<SQLServerHealthCheck>("SQLDBConnectionCheck");
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-
 
 var app = builder.Build();
 
