@@ -23,8 +23,6 @@ namespace CrossFitWOD.Controllers
 
         public async Task SendPlainTextMessageAsync(EmailRequest emailRequest)
         {
-
-            var myEmail = _EmailSettings;
             var email = new MimeMessage
             {
                 Sender = MailboxAddress.Parse(_EmailSettings.Email),
@@ -46,6 +44,31 @@ namespace CrossFitWOD.Controllers
             smtp.Authenticate(_EmailSettings.Email, _EmailSettings.Password);
 
             await smtp.SendAsync(email);
+
+            smtp.Disconnect(true);
+        }
+
+        public async Task SendVerificationEmailAsync(string link, string receiver)
+        {
+            var draft = new MimeMessage
+            {
+                Sender = MailboxAddress.Parse(_EmailSettings.Email),
+                Subject = "Email Verification Required",
+            };
+            draft.To.Add(MailboxAddress.Parse(receiver));
+
+            var builder = new BodyBuilder();
+            builder.HtmlBody =
+                $"<strong>Please click on the link below to verify email prior to login.</strong>" +
+                $"<br/>" +
+                $"{link}";
+            draft.Body = builder.ToMessageBody();
+
+            using var smtp = new SmtpClient();
+            smtp.Connect(_EmailSettings.Host, _EmailSettings.Port, SecureSocketOptions.StartTls);
+            smtp.Authenticate(_EmailSettings.Email, _EmailSettings.Password);
+
+            await smtp.SendAsync(draft);
 
             smtp.Disconnect(true);
         }

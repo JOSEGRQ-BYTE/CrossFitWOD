@@ -74,9 +74,18 @@ builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 // SQL Server Connection
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(builder.Configuration["ConnectionStrings:DefaultConnection"]));
-builder.Services.AddIdentity<User, IdentityRole>(/*options => {
-    options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Jti;
-}*/).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDBContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentity<User, IdentityRole>(options => {
+
+    //options.Password.RequiredLength = 8;
+    //options.Password.RequireDigit = true;
+    //options.Password.RequireUppercase = true;
+    //options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Jti;
+
+    //options.SignIn.RequireConfirmedEmail = true;
+
+    options.User.RequireUniqueEmail = true;
+
+}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDBContext>().AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
 {

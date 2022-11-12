@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using CrossFitWOD.Interfaces;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Web;
 
 namespace CrossFitWOD.Controllers
 {
@@ -22,18 +25,20 @@ namespace CrossFitWOD.Controllers
         private readonly UserManager<User> _UserManager;
         private readonly RoleManager<IdentityRole> _RoleManager;
         private readonly IConfiguration _Configuration;
+        private readonly IEmailService _EmailService;
 
-        public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService)
         {
             _SigninManager = signInManager;
             _UserManager = userManager;
             _Configuration = configuration;
             _RoleManager = roleManager;
+            _EmailService = emailService;
         }
 
-
-
-        [HttpPost("SignUpUser")]
+        /*
+         
+                 [HttpPost("SignUpUser")]
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<SignUpDTO>> SignUpUser([FromBody] SignUpDTO userForm)
         {
@@ -60,11 +65,88 @@ namespace CrossFitWOD.Controllers
                         await _UserManager.AddToRoleAsync(newUser, "Admin");
                         return Created("", userForm);
                     }
+
+                    //var token = await _UserManager.GenerateEmailConfirmationTokenAsync(newUser);
+                    //var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account", new { token, email = newUser.Email }, Request.Scheme);
+                    //var message = new Message(new string[] { newUser.Email }, "Confirmation email link", confirmationLink, null);
+                    //await _EmailService.SendEmailAsync(message);
                 }
 
             }
 
             return BadRequest();
+        }
+         */
+
+        [HttpPost("SignUpUser")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<string>> SignUpUser([FromBody] SignUpDTO userForm)
+        {
+            // ONLY if model is valid
+            if (ModelState.IsValid)
+            {
+                
+                var existingUser = await _UserManager.FindByEmailAsync(userForm.Email);
+                if (existingUser == null)
+                {
+                    User newUser = new User
+                    {
+                        UserName = userForm.Email,
+                        Email = userForm.Email,
+                        FirstName = userForm.FirstName,
+                        LastName = userForm.LastName,
+                        SecurityStamp = Guid.NewGuid().ToString(),
+                    };
+
+                    var newlyCreatedUser = await _UserManager.CreateAsync(newUser, userForm.Password);
+
+                    if (newlyCreatedUser.Succeeded)
+                    {
+                        await _UserManager.AddToRoleAsync(newUser, "Administrator");
+
+                        var token = await _UserManager.GenerateEmailConfirmationTokenAsync(newUser);
+                        token = HttpUtility.UrlEncode(token);
+                        //var confirmationLink = Url.Action(nameof(ConfirmEmail), "User", new { token, email = newUser.Email }, Request.Scheme);
+
+                        var stringParams = new Dictionary<string, string>()
+                        {
+                            { "token", token },
+                            { "email", newUser.Email }
+                        };
+
+                        //returns /api/product/list?cat=221&gender=boy&age=4,5,6
+                        var confirmationLink = QueryHelpers.AddQueryString("http://localhost:4200/EmailVerification", stringParams);
+
+
+                        await _EmailService.SendVerificationEmailAsync(confirmationLink, newUser.Email);
+
+                        return Created("", userForm);
+                    }
+                }
+                else
+                {
+                    return BadRequest("User already exists under this email. Please use diferent email or login.");
+                }
+
+            }
+
+            return BadRequest("Invalid form.");
+        }
+
+        //token will last for two hours as well as the reset password token.
+        [HttpGet("ConfirmEmail")]
+        public async Task<ActionResult<string>> ConfirmEmail(string token, string email)
+        {
+            token = HttpUtility.UrlDecode(token);
+            var user = await _UserManager.FindByEmailAsync(email);
+            if (user is null)
+                return BadRequest("Unable to find user with provided email.");
+
+            IdentityResult result = await _UserManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+                return Ok();
+
+            return BadRequest(result.Errors.FirstOrDefault()?.Description?? "Unable to confirm email.");
         }
 
         [HttpPost("LoginUser")]
@@ -106,6 +188,7 @@ namespace CrossFitWOD.Controllers
 
                         return StatusCode(200, new
                         {
+                            id = existingUser.Id,
                             email = existingUser.Email,
                             firstName = existingUser.FirstName,
                             lastName = existingUser.LastName,
@@ -114,6 +197,10 @@ namespace CrossFitWOD.Controllers
                             isLoggedIn = true
                         });
                     }
+                    //else if (passwordCheck.IsNotAllowed)
+                    //{
+                    //    return StatusCode(400, "Please make sure to verify your email before login in.");
+                    //}
                     else
                     {
                         return StatusCode(400, "Incorrect password.");
@@ -131,7 +218,8 @@ namespace CrossFitWOD.Controllers
 
         [HttpPost("ChangePassword")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword(ChangePasswordDTO passwordModel)
+        //[ValidateAntiForgeryToken]
+        public async Task<ActionResult<string>> ChangePassword(ChangePasswordDTO passwordModel)
         {
             // If valid
             if (ModelState.IsValid)
@@ -153,19 +241,27 @@ namespace CrossFitWOD.Controllers
                         //    errors.Add(error.Description);
                         //    //ModelState.AddModelError(string.Empty, error.Description);
                         //}
-                        return StatusCode(400, result.Errors.FirstOrDefault()?.Description ?? "Unexpected Error");
+
+                        return BadRequest(result.Errors.FirstOrDefault()?.Description ?? "Unexpected Error");
                     }
 
                     await _SigninManager.RefreshSignInAsync(user);
-                    return Ok("Password was changed successfully");
+                    return Ok();
                 }
                 else
-                    return StatusCode(401, "User not found");
+                    return NotFound("User not found");
             }
 
 
-            return BadRequest();
+            return BadRequest("Check your input");
         }
+
+        //[HttpPost("ChangeEmail")]
+        //[Authorize]
+        //[ValidateAntiForgeryToken]
+        //public async Task<ActionResult<string>> ChangeEmail(ChangePasswordDTO passwordModel)
+        //{
+        //}
     }
 }
 
