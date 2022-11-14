@@ -72,6 +72,39 @@ namespace CrossFitWOD.Controllers
 
             smtp.Disconnect(true);
         }
+
+        public async Task SendResetPasswordLinkAsync(string link, User receiver)
+        {
+            var draft = new MimeMessage
+            {
+                Sender = MailboxAddress.Parse(_EmailSettings.Email),
+                Subject = "Reset Password Request",
+            };
+            draft.To.Add(MailboxAddress.Parse(receiver.Email));
+
+            var builder = new BodyBuilder();
+            builder.HtmlBody = $"<p>{receiver.FirstName} {receiver.LastName}," +
+                $"<br/>" +
+                $"We received a request to reset the password to your account linked to this email." +
+                $"<br/>" +
+                $"If you requested this change, please continue to this link:" +
+                $"<br/>" +
+                $"<br/>" +
+                $"<a style=\"color: #fff;background-color: #6c757d;border-color: #6c757d;font-weight: 400;text-align: center;vertical-align: middle;cursor: pointer;border: 1px solid transparent;padding: 0.375rem 0.75rem;line-height: 0.5em;border-radius: 0.25rem;text-decoration: none;\" href=\"{link}\">Set New Password</a>" +
+                $"<br/>" +
+                $"<br/>" +
+                $"otherwise, you may ignore this request and your account will remain intact.</p>.";
+                //$"{link}";
+            draft.Body = builder.ToMessageBody();
+
+            using var smtp = new SmtpClient();
+            smtp.Connect(_EmailSettings.Host, _EmailSettings.Port, SecureSocketOptions.StartTls);
+            smtp.Authenticate(_EmailSettings.Email, _EmailSettings.Password);
+
+            await smtp.SendAsync(draft);
+
+            smtp.Disconnect(true);
+        }
     }
 }
 

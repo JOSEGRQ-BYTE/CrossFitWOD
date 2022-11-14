@@ -7,6 +7,7 @@ namespace CrossFitWOD.Interfaces
     {
         Task SendPlainTextMessageAsync(EmailRequest mailRequest);
         Task SendVerificationEmailAsync(string link, string receiver);
+        Task SendResetPasswordLinkAsync(string link, User receiver);
     }
 }
 

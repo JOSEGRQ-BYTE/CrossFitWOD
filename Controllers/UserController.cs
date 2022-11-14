@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Cors;
 using CrossFitWOD.Interfaces;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Web;
+using YamlDotNet.Core.Tokens;
 
 namespace CrossFitWOD.Controllers
 {
@@ -114,7 +115,6 @@ namespace CrossFitWOD.Controllers
                             { "email", newUser.Email }
                         };
 
-                        //returns /api/product/list?cat=221&gender=boy&age=4,5,6
                         var confirmationLink = QueryHelpers.AddQueryString("http://localhost:4200/EmailVerification", stringParams);
 
 
@@ -256,12 +256,54 @@ namespace CrossFitWOD.Controllers
             return BadRequest("Check your input");
         }
 
-        //[HttpPost("ChangeEmail")]
-        //[Authorize]
+        [HttpGet("ForgotPassword")]
+        public async Task<ActionResult<string>> ForgotPassword(string email)
+        {
+            if (String.IsNullOrEmpty(email))
+                return BadRequest("Email field must not be empty.");
+
+            var user = await _UserManager.FindByEmailAsync(email);
+
+            if (user is null)
+                return NotFound("User not found under email provided.");
+
+            var token = await _UserManager.GeneratePasswordResetTokenAsync(user);
+            token = HttpUtility.UrlEncode(token);
+
+            var stringParams = new Dictionary<string, string>()
+            {
+                { "token", token },
+                { "email", user.Email }
+            };
+
+            var confirmationLink = QueryHelpers.AddQueryString("http://localhost:4200/ResetPassword", stringParams);
+
+
+            await _EmailService.SendResetPasswordLinkAsync(confirmationLink, user);
+
+            return Ok();
+
+        }
+
+        [HttpPost("ResetPassword")]
         //[ValidateAntiForgeryToken]
-        //public async Task<ActionResult<string>> ChangeEmail(ChangePasswordDTO passwordModel)
-        //{
-        //}
+        public async Task<ActionResult<string>> ResetPassword(ResetPasswordDTO model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _UserManager.FindByEmailAsync(model.Email);
+                if (user is null)
+                    return NotFound("User not found under email provided.");
+
+                var result = await _UserManager.ResetPasswordAsync(user, HttpUtility.UrlDecode(model.Token), model.Password);
+                if (result.Succeeded)
+                    return Ok();
+
+                return BadRequest(result.Errors.FirstOrDefault()?.Description);
+            }
+
+            return BadRequest("Invaid form.");
+        }
     }
 }
 

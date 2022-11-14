@@ -81,11 +81,13 @@ builder.Services.AddIdentity<User, IdentityRole>(options => {
     //options.Password.RequireUppercase = true;
     //options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Jti;
 
-    //options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
 
     options.User.RequireUniqueEmail = true;
 
 }).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDBContext>().AddDefaultTokenProviders();
+
+//builder.Services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(2));
 
 builder.Services.AddAuthentication(options =>
 {
