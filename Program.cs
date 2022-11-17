@@ -76,12 +76,21 @@ builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(builder.Configuration["ConnectionStrings:DefaultConnection"]));
 builder.Services.AddIdentity<User, IdentityRole>(options => {
 
+    options.Password.RequireDigit = true;
+    options.Password.RequiredUniqueChars = 1;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 8;
+
     //options.Password.RequiredLength = 8;
     //options.Password.RequireDigit = true;
+    //options.Password.RequireNonAlphanumeric = true;
     //options.Password.RequireUppercase = true;
     //options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Jti;
 
     options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedPhoneNumber = false;
 
     options.User.RequireUniqueEmail = true;
 

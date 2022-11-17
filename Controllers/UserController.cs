@@ -103,7 +103,7 @@ namespace CrossFitWOD.Controllers
 
                     if (newlyCreatedUser.Succeeded)
                     {
-                        await _UserManager.AddToRoleAsync(newUser, "Administrator");
+                        await _UserManager.AddToRoleAsync(newUser, userForm.Role);
 
                         var token = await _UserManager.GenerateEmailConfirmationTokenAsync(newUser);
                         token = HttpUtility.UrlEncode(token);
@@ -194,13 +194,14 @@ namespace CrossFitWOD.Controllers
                             lastName = existingUser.LastName,
                             token = new JwtSecurityTokenHandler().WriteToken(userToken),
                             expiration = userToken.ValidTo,
-                            isLoggedIn = true
+                            isLoggedIn = true,
+                            isAdministrator = await _UserManager.IsInRoleAsync(existingUser, "Administrator")
                         });
                     }
-                    //else if (passwordCheck.IsNotAllowed)
-                    //{
-                    //    return StatusCode(400, "Please make sure to verify your email before login in.");
-                    //}
+                    else if (passwordCheck.IsNotAllowed)
+                    {
+                        return StatusCode(400, "Please make sure to verify your email before login in.");
+                    }
                     else
                     {
                         return StatusCode(400, "Incorrect password.");
