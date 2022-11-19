@@ -27,14 +27,16 @@ namespace CrossFitWOD.Controllers
         private readonly RoleManager<IdentityRole> _RoleManager;
         private readonly IConfiguration _Configuration;
         private readonly IEmailService _EmailService;
+        private IWebHostEnvironment _Environment;
 
-        public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService)
+        public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, IWebHostEnvironment environment)
         {
             _SigninManager = signInManager;
             _UserManager = userManager;
             _Configuration = configuration;
             _RoleManager = roleManager;
             _EmailService = emailService;
+            _Environment = environment;
         }
 
         /*
@@ -81,7 +83,7 @@ namespace CrossFitWOD.Controllers
 
         [HttpPost("SignUpUser")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<string>> SignUpUser([FromBody] SignUpDTO userForm)
+        public async Task<IActionResult> SignUpUser([FromForm] SignUpDTO userForm)
         {
             // ONLY if model is valid
             if (ModelState.IsValid)
@@ -90,6 +92,23 @@ namespace CrossFitWOD.Controllers
                 var existingUser = await _UserManager.FindByEmailAsync(userForm.Email);
                 if (existingUser == null)
                 {
+
+                    // Create directory if does not exist
+                    string uploadsPath = Path.Combine(_Environment.ContentRootPath, "Uploads", "Images");
+                    Directory.CreateDirectory(uploadsPath);
+
+                    // Generate Unique GUID and collect info
+                    string uniqueProfileID = Guid.NewGuid().ToString();
+                    var extention = Path.GetExtension(userForm.profilePicture.FileName);
+                    string fileName = $"{uniqueProfileID}-ProfilePhoto{extention}";
+
+                    var path = Path.Combine(uploadsPath, fileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await userForm.profilePicture.CopyToAsync(stream);
+                    }
+
                     User newUser = new User
                     {
                         UserName = userForm.Email,
@@ -97,6 +116,7 @@ namespace CrossFitWOD.Controllers
                         FirstName = userForm.FirstName,
                         LastName = userForm.LastName,
                         SecurityStamp = Guid.NewGuid().ToString(),
+                        ProfilePictureURL = fileName,
                     };
 
                     var newlyCreatedUser = await _UserManager.CreateAsync(newUser, userForm.Password);
@@ -121,6 +141,14 @@ namespace CrossFitWOD.Controllers
                         await _EmailService.SendVerificationEmailAsync(confirmationLink, newUser.Email);
 
                         return Created("", userForm);
+                    }
+                    else
+                    {
+                        if (System.IO.File.Exists(path))
+                        {
+                            System.IO.File.Delete(path);
+                        }
+                        return BadRequest("User could not be created.");
                     }
                 }
                 else

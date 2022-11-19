@@ -49,6 +49,8 @@
     <None Remove="Migrations\" />
     <None Remove="Interfaces\" />
     <None Remove="Services\" />
+    <None Remove="Uploads\" />
+    <None Remove="Uploads\Images\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
@@ -60,6 +62,8 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Services\" />
     <Folder Include="wwwroot\" />
+    <Folder Include="Uploads\" />
+    <Folder Include="Uploads\Images\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\" />

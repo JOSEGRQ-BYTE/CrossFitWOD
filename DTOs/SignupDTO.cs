@@ -27,6 +27,11 @@ namespace CrossFitWOD.DTOs
         [DataType(DataType.Password)]
         [Compare("Password")]
         public string? ConfirmPassword { get; set; }
+
+        [Required]
+        public IFormFile profilePicture { get; set; }
+        //[Required]
+        //public byte[] ProfilePicture { get; set; }
     }
 }
 
