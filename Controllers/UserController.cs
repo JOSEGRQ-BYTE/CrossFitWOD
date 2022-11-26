@@ -28,6 +28,7 @@ namespace CrossFitWOD.Controllers
         private readonly IConfiguration _Configuration;
         private readonly IEmailService _EmailService;
         private IWebHostEnvironment _Environment;
+        private Dictionary<string, string> ImageTypes;
 
         public UserController(IConfiguration configuration, SignInManager<User> signInManager, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, IWebHostEnvironment environment)
         {
@@ -37,6 +38,14 @@ namespace CrossFitWOD.Controllers
             _RoleManager = roleManager;
             _EmailService = emailService;
             _Environment = environment;
+            ImageTypes = new Dictionary<string, string>
+            {
+                {".png", "image/png"},
+                {".jpg", "image/jpeg"},
+                {".jpeg", "image/jpeg"},
+                {".gif", "image/gif"},
+                {".tif", "image/tif"}
+            };
         }
 
         /*
@@ -178,7 +187,7 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpPost("LoginUser")]
-        public async Task<ActionResult> LoginUser(LoginDTO userDetails)
+        public async Task<IActionResult> LoginUser(LoginDTO userDetails)
         {
             // ONLY if model valid
             if (ModelState.IsValid)
@@ -223,7 +232,8 @@ namespace CrossFitWOD.Controllers
                             token = new JwtSecurityTokenHandler().WriteToken(userToken),
                             expiration = userToken.ValidTo,
                             isLoggedIn = true,
-                            isAdministrator = await _UserManager.IsInRoleAsync(existingUser, "Administrator")
+                            isAdministrator = await _UserManager.IsInRoleAsync(existingUser, "Administrator"),
+                            profilePictureURL = existingUser.ProfilePictureURL
                         });
                     }
                     else if (passwordCheck.IsNotAllowed)
@@ -244,6 +254,46 @@ namespace CrossFitWOD.Controllers
 
             return BadRequest();
         }
+
+
+        private string GetContentType(string path)
+        {
+            var extention = Path.GetExtension(path).ToLowerInvariant();
+            return ImageTypes[extention];
+        }
+
+        [HttpGet("DownloadProfilePicture")]
+        [Authorize]
+        public async Task<IActionResult> DownloadProfilePicture([FromQuery] string relativePath)
+        {
+
+            if (!String.IsNullOrEmpty(relativePath) && relativePath != "/")
+            {
+                // Create directory if does not exist
+                string uploadsPath = Path.Combine(_Environment.ContentRootPath, "Uploads", "Images");
+                Directory.CreateDirectory(uploadsPath);
+
+                var path = Path.Combine(uploadsPath, relativePath);
+
+                var memory = new MemoryStream();
+                using (var stream = new FileStream(path, FileMode.Open))
+                {
+                    await stream.CopyToAsync(memory);
+                }
+                memory.Position = 0;
+                //var image = File(memory, GetContentType(path), Path.GetFileName(path));
+
+                return File(memory, GetContentType(path), Path.GetFileName(path));
+            }
+            else
+            {
+                return BadRequest("Could not locate profile image.");
+            }
+
+        }
+
+
+
 
         [HttpPost("ChangePassword")]
         [Authorize]
