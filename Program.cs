@@ -173,8 +173,9 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
-    endpoints.MapFallbackToFile("/{id}", "/index.html");
-    endpoints.MapFallbackToFile("/", "/index.html");
+    //endpoints.MapFallbackToFile("/{id}", "/index.html");
+    //endpoints.MapFallbackToFile("/", "/index.html");
+    endpoints.MapFallbackToFile("/index.html");
 });
 
 

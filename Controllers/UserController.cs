@@ -144,7 +144,7 @@ namespace CrossFitWOD.Controllers
                             { "email", newUser.Email }
                         };
 
-                        var confirmationLink = QueryHelpers.AddQueryString("http://localhost:4200/EmailVerification", stringParams);
+                        var confirmationLink = QueryHelpers.AddQueryString("https://jgrquezada.com/EmailVerification", stringParams);
 
 
                         await _EmailService.SendVerificationEmailAsync(confirmationLink, newUser.Email);
@@ -355,7 +355,7 @@ namespace CrossFitWOD.Controllers
                 { "email", user.Email }
             };
 
-            var confirmationLink = QueryHelpers.AddQueryString("http://localhost:4200/ResetPassword", stringParams);
+            var confirmationLink = QueryHelpers.AddQueryString("https://jgrquezada.com/ResetPassword", stringParams);
 
 
             await _EmailService.SendResetPasswordLinkAsync(confirmationLink, user);
