@@ -17,7 +17,8 @@ namespace CrossFitWOD.Controllers
 
     [ApiController]
     [Route("API/Workouts")]
-    [Authorize(Roles = "Administrator")]
+    //[Authorize(Roles = "Administrator")]
+    [Authorize]
     public class  WODController: ControllerBase
     {
 
@@ -32,12 +33,36 @@ namespace CrossFitWOD.Controllers
             _SignInManager = signInManager;
         }
 
-        [HttpGet]
+        [HttpGet("GetWODs")]
         [AllowAnonymous]
-        public ActionResult<IEnumerable<WorkoutOfTheDayDTO>> GetWODs()
+        public async Task<ActionResult<IEnumerable<WorkoutOfTheDayDTO>>> GetWODs([FromQuery] string? userID = null)
         {
 
-            var wods = _UnitOfWork.WODRepository.GetAll().Select(wod => wod.ToDTO());
+            IQueryable<WorkoutOfTheDayDTO> wods;
+
+            // By default we get the WODS of the administrator
+            if (userID is null)
+            {
+                var administrators = await _UserManager.GetUsersInRoleAsync("Administrator");
+                var appAdministrator = administrators.FirstOrDefault();
+
+                if (appAdministrator is null)
+                    return NotFound();
+
+                wods = _UnitOfWork.WODRepository.GetAll().Where(wod => wod.Date >= DateTime.Now.AddDays(-7) && wod.UserId == appAdministrator.Id).OrderBy(wod => wod.Date).Select(wod => wod.ToDTO());
+            }
+            // user is logged in get their wods
+            else
+            {
+
+                var currentuser = await _UserManager.FindByIdAsync(userID);
+
+                if (currentuser is null)
+                    return NotFound();
+
+                wods = _UnitOfWork.WODRepository.GetAll().Where(wod => wod.Date >= DateTime.Now.AddDays(-7) && wod.UserId == currentuser.Id).OrderBy(wod => wod.Date).Select(wod => wod.ToDTO());
+
+            }
 
             if (wods is null)
                 return NotFound();
@@ -46,7 +71,7 @@ namespace CrossFitWOD.Controllers
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
+        //[AllowAnonymous]
         public async Task<ActionResult<WorkoutOfTheDayDTO>> GetWOD(Guid id)
         {
             var wod = await _UnitOfWork.WODRepository.GetByID<Guid>(id);
