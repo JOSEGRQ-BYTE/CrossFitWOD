@@ -15,6 +15,9 @@ namespace CrossFitWOD.Data
         }
 
         public virtual DbSet<WorkoutOfTheDay>? WODs { get; set; }
+        public virtual DbSet<StrengthTraining>? StrengthTrainingWorkouts { get; set; }
+        public virtual DbSet<Exercise>? Exercises { get; set; }
+
 
         // Provides the ability for us to manage the table properties of the tables in the database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,8 +26,16 @@ namespace CrossFitWOD.Data
 
 
             modelBuilder.Entity<WorkoutOfTheDay>()
+                .ToTable("CrossFit","Workouts")
                 .HasOne(p => p.User)
-                .WithMany(b => b.Workouts).IsRequired();
+                .WithMany(b => b.Workouts)
+                .IsRequired();
+
+            modelBuilder.Entity<StrengthTraining>()
+                .ToTable("Strength", "Workouts");
+
+            modelBuilder.Entity<Exercise>()
+                .ToTable("Exercises", "Workouts");
 
             modelBuilder.Entity<User>()
             .HasMany(c => c.Workouts)

@@ -6,6 +6,7 @@ using CrossFitWOD.Data;
 using CrossFitWOD.Extensions;
 using CrossFitWOD.Interfaces;
 using CrossFitWOD.Models;
+using CrossFitWOD.Profiles;
 using CrossFitWOD.Repositories;
 using HealthChecks.UI.Client;
 using k8s.Models;
@@ -33,6 +34,7 @@ builder.Services.AddCors(options =>
 
 
 // Add services to the container.
+builder.Services.AddAutoMapper(typeof(StrengthTrainingProfile)).AddAutoMapper(typeof(ExerciseProfile)).AddAutoMapper(typeof(WODProfile));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -70,6 +72,8 @@ builder.Services.AddSwaggerGen(s => {
 // Dependency Injection
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IWODRepository, WODRepository>();
+builder.Services.AddTransient<IStrengthTrainingRepository, StrengthTrainingRepository>();
+builder.Services.AddTransient<IExerciseRepository, ExerciseRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 // SQL Server Connection
@@ -113,7 +117,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = builder.Configuration["JWT:Audience"],
         ValidIssuer = builder.Configuration["JWT:Issuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"])),
+        ClockSkew = TimeSpan.Zero
     };
 });
 

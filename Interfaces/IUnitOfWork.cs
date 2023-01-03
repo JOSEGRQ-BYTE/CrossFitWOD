@@ -9,6 +9,8 @@ namespace CrossFitWOD.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         IWODRepository WODRepository { get; }
+        IStrengthTrainingRepository StrengthTrainingRepository { get; }
+        IExerciseRepository ExerciseRepository { get; }
         void Save();
     }
 }

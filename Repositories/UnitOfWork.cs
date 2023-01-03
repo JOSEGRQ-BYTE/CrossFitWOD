@@ -15,12 +15,16 @@ namespace CrossFitWOD.Repositories
         private AppDBContext _Context;
         private bool _Disposed = false;
         public IWODRepository WODRepository { get; }
+        public IStrengthTrainingRepository StrengthTrainingRepository { get; }
+        public IExerciseRepository ExerciseRepository { get; }
 
 
-        public UnitOfWork(AppDBContext dBContext, IWODRepository wODRepository)
+        public UnitOfWork(AppDBContext dBContext, IWODRepository wODRepository, IStrengthTrainingRepository strengthTrainingRepository, IExerciseRepository exerciseRepository)
         {
             _Context = dBContext;
             WODRepository = wODRepository;
+            StrengthTrainingRepository = strengthTrainingRepository;
+            ExerciseRepository = exerciseRepository;
         }
 
         public void Save()

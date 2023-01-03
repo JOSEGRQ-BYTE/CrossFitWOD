@@ -6,7 +6,7 @@ namespace CrossFitWOD.Extensions
 {
     public static class DataTransferObjectConvertion
     {
-        public static WorkoutOfTheDayDTO ToDTO(this WorkoutOfTheDay wod)
+        /*public static WorkoutOfTheDayDTO ToDTO(this WorkoutOfTheDay wod)
         {
             return new WorkoutOfTheDayDTO
             {
@@ -23,7 +23,7 @@ namespace CrossFitWOD.Extensions
                //FirstName = wod.User.FirstName,
                //LastName = wod.User.LastName,
             };
-        }
+        }*/
     }
 }
 
