@@ -144,21 +144,18 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHttpsRedirection();
 }
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 //app.UseStaticFiles();
 //app.UseRouting();
 
 
-DefaultFilesOptions options = new DefaultFilesOptions();
-options.DefaultFileNames.Clear();
-options.DefaultFileNames.Add("/index.html");
-app.UseDefaultFiles(options);
-
+//DefaultFilesOptions options = new DefaultFilesOptions();
+//options.DefaultFileNames.Clear();
+//options.DefaultFileNames.Add("/index.html");
 //app.UseDefaultFiles(options);
+app.UseDefaultFiles();
 app.UseStaticFiles();
-
 app.UseRouting();
 /*if (!string.IsNullOrEmpty(ServerConfig.FolderNotFoundFallbackPath))
 {
@@ -184,7 +181,7 @@ app.UseEndpoints(endpoints =>
 });
 
 
-app.MapControllers();
+//app.MapControllers();
 app.MapHealthChecks("/API/Health", new HealthCheckOptions()
 {
     Predicate = _ => true,

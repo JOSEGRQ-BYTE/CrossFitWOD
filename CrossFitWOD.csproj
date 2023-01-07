@@ -74,5 +74,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\" />
+    <Content Remove="wwwroot\bootstrap-icons.dba5e3b77b478961.woff" />
+    <Content Remove="wwwroot\favicon.ico" />
+    <Content Remove="wwwroot\index.html" />
+    <Content Remove="wwwroot\3rdpartylicenses.txt" />
+    <Content Remove="wwwroot\dark.css" />
+    <Content Remove="wwwroot\bootstrap-icons.6fdf98f9eb97d9e7.woff2" />
+    <Content Remove="wwwroot\light.css" />
+    <Content Remove="wwwroot\scripts.09af772bfa77d50d.js" />
   </ItemGroup>
 </Project>
