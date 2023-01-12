@@ -8,7 +8,8 @@ namespace CrossFitWOD.DTOs
         [Required]
         public string? ExerciseId { get; set; }
 
-        //public string? Description { get; set; }
+        [Required]
+        public bool IsBodyweight { get; set; }
 
         [Required]
         public int Weight { get; set; }

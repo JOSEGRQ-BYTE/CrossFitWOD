@@ -129,39 +129,31 @@ namespace CrossFitWOD.Controllers
             return BadRequest();
         }
 
-        /*
+        
         [HttpPut("{id}")]
-        public async Task<ActionResult<WorkoutOfTheDayDTO>> UpdateWOD(Guid id, [FromBody] UpdateWorkoutOfTheDayDTO updatedWOD)
+        public async Task<IActionResult> UpdateWOD(string id, [FromBody] StrengthTrainingRequest updatedExercise)
         {
-            var currentWOD = await _UnitOfWork.WODRepository.GetByID(id);
+            var currentExercise = await _context.StrengthTrainingRepository.GetByID(id);
 
-            if (currentWOD is null)
-                return NotFound();
+            if (currentExercise is null)
+                return BadRequest("Workout not found");
 
-            //WorkoutOfTheDay refreshedWOD = currentWOD with
-            //{
-            //    Title = updatedWOD.Title,
-            //    Description = updatedWOD.Description,
-            //    CoachTip = updatedWOD.CoachTip,
-            //    Level = updatedWOD.Level,
-            //   Date = updatedWOD.Date,
-            //    Results = updatedWOD.Results
-            //};
+            currentExercise.ExerciseId = updatedExercise.ExerciseId;
+            currentExercise.Weight = updatedExercise.Weight;
+            currentExercise.IsBodyweight = updatedExercise.IsBodyweight;
+            currentExercise.Reps = updatedExercise.Reps;
+            currentExercise.Sets = updatedExercise.Sets;
 
-
-            currentWOD.Title = updatedWOD.Title;
-            currentWOD.Description = updatedWOD.Description;
-            currentWOD.CoachTip = updatedWOD.CoachTip;
-            currentWOD.Level = updatedWOD.Level;
-            currentWOD.Date = updatedWOD.Date;
-            currentWOD.Results = updatedWOD.Results;
-
-            _UnitOfWork.WODRepository.Update(currentWOD);
-
-            return StatusCode(200, currentWOD);
-
+            try
+            {
+                _context.StrengthTrainingRepository.Update(currentExercise);
+                return StatusCode(200, _mapper.Map<StrengthTrainingResponse>(currentExercise));
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error");
+            }
         }
-        */
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)

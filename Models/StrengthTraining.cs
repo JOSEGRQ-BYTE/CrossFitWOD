@@ -12,9 +12,9 @@ namespace CrossFitWOD.Models
         [Required]
         public string? ExerciseId{ get; set; }
 
-        //public string? Description { get; set; }
-
         [Required]
+        public bool IsBodyweight { get; set; }
+
         public int Weight { get; set; }
 
         [Required]
